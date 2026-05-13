@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Poker Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 28px;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #1e293b;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: #e2e8f0; }
+  .tab.active { background: #334155; color: #fff; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #334155;
+  }
+  .card h2 { font-size: 16px; margin-bottom: 14px; color: #cbd5e1; }
+
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 0; }
+
+  label {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 14px;
+  }
+  input:focus { outline: none; border-color: #10b981; }
+
+  button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: #10b981; color: #fff; }
+  .btn-primary:hover { background: #059669; }
+  .btn-secondary { background: #334155; color: #e2e8f0; }
+  .btn-secondary:hover { background: #475569; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-icon {
+    width: 32px; height: 32px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600;
+  }
+
+  .player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .player-row {
+    display: grid;
+    grid-template-columns: 1.3fr auto 1fr 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+  }
+  .player-row .name {
+    font-weight: 500;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .player-row .name-main {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .player-row .name-sub {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .buyin-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .buyin-count {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .stat {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .stat strong { color: #e2e8f0; display: block; font-size: 15px; }
+  .stat input { font-size: 14px; padding: 6px 8px; }
+
+  .pnl { font-weight: 600; font-size: 15px; }
+  .pnl.pos { color: #10b981; }
+  .pnl.neg { color: #ef4444; }
+  .pnl.zero { color: #94a3b8; }
+
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    background: #0f172a;
+    padding: 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    border: 1px solid #334155;
+  }
+  .summary-bar .item { text-align: center; }
+  .summary-bar .label { font-size: 11px; color: #94a3b8; }
+  .summary-bar .value { font-size: 18px; font-weight: 600; margin-top: 2px; }
+
+  .balance-warn {
+    background: #422006;
+    border: 1px solid #b45309;
+    color: #fbbf24;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+    display: none;
+  }
+  .balance-warn.show { display: block; }
+
+  .game-history-item {
+    background: #0f172a;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+  }
+  .game-history-item .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .game-history-item .game-date { font-size: 13px; color: #94a3b8; }
+  .game-history-item .player-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 14px;
+    border-top: 1px dashed #334155;
+  }
+  .game-history-item .player-line:first-of-type { border-top: none; }
+
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .stats-table th, .stats-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #334155;
+  }
+  .stats-table th {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+  }
+  .stats-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .empty {
+    text-align: center;
+    color: #64748b;
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .player-row {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "name remove"
+        "buyincount buyincount"
+        "paid cashout"
+        "settle pnl";
+      gap: 8px;
+    }
+    .player-row .name { grid-area: name; }
+    .player-row .remove-btn { grid-area: remove; justify-self: end; }
+    .player-row .col-buyin { grid-area: buyincount; justify-content: center; }
+    .player-row .col-paid { grid-area: paid; }
+    .player-row .col-cashout { grid-area: cashout; }
+    .player-row .col-settle { grid-area: settle; text-align: center; }
+    .player-row .col-pnl { grid-area: pnl; text-align: center; }
+    .summary-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Poker Calculator</h1>
+    <div class="subtitle">Track buy-ins, cash-outs, and lifetime P&amp;L</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="game">Current Game</button>
+    <button class="tab" data-tab="history">History</button>
+    <button class="tab" data-tab="stats">Lifetime Stats</button>
+  </div>
+
+  <!-- ============ CURRENT GAME ============ -->
+  <div class="panel active" id="panel-game">
+    <div class="card">
+      <h2>Game Setup</h2>
+      <div class="row">
+        <div style="flex: 0 0 180px;">
+          <label>Buy-in Amount ($)</label>
+          <input type="number" id="buyinAmount" value="20" min="0" step="0.01" />
+        </div>
+        <div style="flex: 1;">
+          <label>Add Player</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="newPlayerName" placeholder="Player name" />
+            <button class="btn-primary" id="addPlayerBtn">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Players</h2>
+      <div class="player-list" id="playerList"></div>
+      <div class="empty" id="playerEmpty">No players yet. Add a player above to start.</div>
+
+      <div class="summary-bar">
+        <div class="item">
+          <div class="label">Total Bought In</div>
+          <div class="value" id="totalBuyin">$0.00</div>
+        </div>
+        <div class="item">
+          <div class="label">Cash Paid</div>
+          <div class="value" id="totalPaid">$0.00</div>
+        </div>
+        <div class="item">
+          <div class="label">Cashed Out</div>
+          <div class="value" id="totalCashout">$0.00</div>
+        </div>
+        <div class="item">
+          <div class="label">Pot Balance</div>
+          <div class="value" id="totalDiff">$0.00</div>
+        </div>
+      </div>
+      <div class="balance-warn" id="balanceWarn"></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <button class="btn-primary" id="endGameBtn">End Game &amp; Save</button>
+        <button class="btn-secondary" id="resetGameBtn">Reset Without Saving</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HISTORY ============ -->
+  <div class="panel" id="panel-history">
+    <div class="card">
+      <h2>Game History</h2>
+      <div id="historyList"></div>
+      <div class="empty" id="historyEmpty">No games saved yet.</div>
+    </div>
+  </div>
+
+  <!-- ============ STATS ============ -->
+  <div class="panel" id="panel-stats">
+    <div class="card">
+      <h2>Lifetime Standings</h2>
+      <table class="stats-table" id="statsTable" style="display: none;">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th class="num">Games</th>
+            <th class="num">Total In</th>
+            <th class="num">Cash Paid</th>
+            <th class="num">Total Out</th>
+            <th class="num">Unsettled</th>
+            <th class="num">Net P&amp;L</th>
+          </tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+      <div class="empty" id="statsEmpty">No game data yet. Play and save a game first.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'pokerCalc.v1';
+
+let state = {
+  current: {
+    buyinAmount: 20,
+    players: []  // { id, name, buyins, cashout }
+  },
+  history: []   // { id, date, buyinAmount, players: [{name, buyins, totalIn, cashout, pnl}] }
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = { ...state, ...parsed };
+    }
+  } catch (e) {}
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('localStorage save failed:', e);
+  }
+}
+
+function fmt(n) {
+  const sign = n < 0 ? '-' : '';
+  return sign + '$' + Math.abs(n).toFixed(2);
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'history') renderHistory();
+    if (btn.dataset.tab === 'stats') renderStats();
+  });
+});
+
+// ---------- Current Game ----------
+const buyinInput = document.getElementById('buyinAmount');
+const newPlayerInput = document.getElementById('newPlayerName');
+
+buyinInput.addEventListener('input', () => {
+  state.current.buyinAmount = parseFloat(buyinInput.value) || 0;
+  save();
+  for (const p of state.current.players) recalcRow(p.id);
+  updateSummary();
+});
+
+document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+newPlayerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addPlayer();
+});
+
+function addPlayer() {
+  let name = newPlayerInput.value.trim();
+  if (!name) return;
+  if (name === name.toLowerCase()) {
+    name = name.replace(/\b\w/g, c => c.toUpperCase());
+  }
+  state.current.players.push({
+    id: uid(),
+    name,
+    buyins: 1,
+    cashPaid: 0,
+    cashout: 0
+  });
+  newPlayerInput.value = '';
+  save();
+  renderPlayers();
+}
+
+function removePlayer(id) {
+  state.current.players = state.current.players.filter(p => p.id !== id);
+  save();
+  renderPlayers();
+}
+
+function adjustBuyins(id, delta) {
+  const p = state.current.players.find(p => p.id === id);
+  if (!p) return;
+  p.buyins = Math.max(0, p.buyins + delta);
+  save();
+  recalcRow(id);
+  updateSummary();
+}
+
+function updateCashout(id, value) {
+  const p = state.current.players.find(p => p.id === id);
+  if (!p) return;
+  p.cashout = parseFloat(value) || 0;
+  save();
+  recalcRow(id);
+  updateSummary();
+}
+
+function updateCashPaid(id, value) {
+  const p = state.current.players.find(p => p.id === id);
+  if (!p) return;
+  p.cashPaid = parseFloat(value) || 0;
+  save();
+  recalcRow(id);
+  updateSummary();
+}
+
+function computeDerived(p) {
+  const totalIn = p.buyins * state.current.buyinAmount;
+  const cashPaid = p.cashPaid || 0;
+  const cashout = p.cashout || 0;
+  const pnl = cashout - totalIn;
+  const settle = totalIn - cashPaid - cashout;
+  let settleText, settleClass;
+  if (Math.abs(settle) < 0.01) {
+    settleText = 'Even';
+    settleClass = 'zero';
+  } else if (settle > 0) {
+    settleText = 'Owes ' + fmt(settle);
+    settleClass = 'neg';
+  } else {
+    settleText = 'Gets ' + fmt(-settle);
+    settleClass = 'pos';
+  }
+  const pnlClass = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'zero';
+  const pnlSign = pnl > 0 ? '+' : '';
+  const pnlText = `${pnlSign}${fmt(pnl)}`;
+  return { totalIn, pnl, settle, settleText, settleClass, pnlClass, pnlText };
+}
+
+function rowHtml(p) {
+  const d = computeDerived(p);
+  return `
+    <div class="player-row" data-id="${p.id}">
+      <div class="name">
+        <div class="name-main">${escapeHtml(p.name)}</div>
+        <div class="name-sub">Buy-in total: ${fmt(d.totalIn)}</div>
+      </div>
+      <div class="col-buyin buyin-control">
+        <button class="btn-secondary btn-icon" onclick="adjustBuyins('${p.id}', -1)">−</button>
+        <span class="buyin-count">${p.buyins}</span>
+        <button class="btn-primary btn-icon" onclick="adjustBuyins('${p.id}', 1)">+</button>
+      </div>
+      <div class="col-paid stat">
+        <label style="margin-bottom:2px;">Cash Paid</label>
+        <input type="number" min="0" step="0.01" value="${p.cashPaid || ''}"
+               placeholder="0.00"
+               oninput="updateCashPaid('${p.id}', this.value)" />
+      </div>
+      <div class="col-cashout stat">
+        <label style="margin-bottom:2px;">Cash Out</label>
+        <input type="number" min="0" step="0.01" value="${p.cashout || ''}"
+               placeholder="0.00"
+               oninput="updateCashout('${p.id}', this.value)" />
+      </div>
+      <div class="col-settle stat">
+        <label style="margin-bottom:2px;">Settle</label>
+        <strong class="pnl ${d.settleClass}">${d.settleText}</strong>
+      </div>
+      <div class="col-pnl stat">
+        <label style="margin-bottom:2px;">P&amp;L</label>
+        <strong class="pnl ${d.pnlClass}">${d.pnlText}</strong>
+      </div>
+      <button class="btn-danger btn-icon remove-btn" onclick="removePlayer('${p.id}')" title="Remove">×</button>
+    </div>
+  `;
+}
+
+function recalcRow(id) {
+  const p = state.current.players.find(p => p.id === id);
+  if (!p) return;
+  const row = document.querySelector(`.player-row[data-id="${id}"]`);
+  if (!row) return;
+  const d = computeDerived(p);
+  row.querySelector('.name-sub').textContent = `Buy-in total: ${fmt(d.totalIn)}`;
+  row.querySelector('.buyin-count').textContent = p.buyins;
+  const settleEl = row.querySelector('.col-settle strong');
+  settleEl.className = `pnl ${d.settleClass}`;
+  settleEl.textContent = d.settleText;
+  const pnlEl = row.querySelector('.col-pnl strong');
+  pnlEl.className = `pnl ${d.pnlClass}`;
+  pnlEl.textContent = d.pnlText;
+}
+
+function updateSummary() {
+  const players = state.current.players;
+  const totalIn = players.reduce((s, p) => s + p.buyins * state.current.buyinAmount, 0);
+  const totalPaid = players.reduce((s, p) => s + (p.cashPaid || 0), 0);
+  const totalOut = players.reduce((s, p) => s + (p.cashout || 0), 0);
+  const diff = totalOut - totalIn;
+
+  document.getElementById('totalBuyin').textContent = fmt(totalIn);
+  document.getElementById('totalPaid').textContent = fmt(totalPaid);
+  document.getElementById('totalCashout').textContent = fmt(totalOut);
+  const diffEl = document.getElementById('totalDiff');
+  diffEl.textContent = (diff > 0 ? '+' : '') + fmt(diff);
+  diffEl.style.color = Math.abs(diff) < 0.01 ? '#10b981' : '#fbbf24';
+
+  const warn = document.getElementById('balanceWarn');
+  if (totalOut > 0 && Math.abs(diff) >= 0.01) {
+    warn.textContent = `⚠ Cash-outs don't match buy-ins (off by ${fmt(Math.abs(diff))}). Check the numbers before saving.`;
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playerList');
+  const empty = document.getElementById('playerEmpty');
+  const players = state.current.players;
+
+  if (players.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    list.innerHTML = players.map(rowHtml).join('');
+  }
+  updateSummary();
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ---------- End / Reset ----------
+document.getElementById('endGameBtn').addEventListener('click', () => {
+  const players = state.current.players;
+  if (players.length === 0) {
+    alert('Add at least one player before saving.');
+    return;
+  }
+  const anyCashout = players.some(p => p.cashout > 0);
+  if (!anyCashout) {
+    if (!confirm('No cash-outs entered. Save anyway? Each player will be recorded as a full loss.')) return;
+  }
+
+  const buyinAmount = state.current.buyinAmount;
+  const record = {
+    id: uid(),
+    date: new Date().toISOString(),
+    buyinAmount,
+    players: players.map(p => {
+      const totalIn = p.buyins * buyinAmount;
+      const cashPaid = p.cashPaid || 0;
+      const cashout = p.cashout || 0;
+      return {
+        name: p.name,
+        buyins: p.buyins,
+        totalIn,
+        cashPaid,
+        cashout,
+        pnl: cashout - totalIn,
+        settle: totalIn - cashPaid - cashout
+      };
+    })
+  };
+  state.history.unshift(record);
+  state.current.players = [];
+  save();
+  renderPlayers();
+  alert('Game saved.');
+});
+
+document.getElementById('resetGameBtn').addEventListener('click', () => {
+  if (state.current.players.length === 0) return;
+  if (!confirm('Clear current game without saving?')) return;
+  state.current.players = [];
+  save();
+  renderPlayers();
+});
+
+// ---------- History ----------
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if (state.history.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = state.history.map(g => {
+    const date = new Date(g.date);
+    const dateStr = date.toLocaleString(undefined, {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit'
+    });
+    const playersHtml = g.players.map(p => {
+      const cls = p.pnl > 0 ? 'pos' : p.pnl < 0 ? 'neg' : 'zero';
+      const sign = p.pnl > 0 ? '+' : '';
+      const settle = p.settle != null ? p.settle : (p.totalIn - (p.cashPaid || 0) - p.cashout);
+      let settleText;
+      if (Math.abs(settle) < 0.01) settleText = '<span style="color:#64748b;">Settled</span>';
+      else if (settle > 0) settleText = `<span class="pnl neg">Owes ${fmt(settle)}</span>`;
+      else settleText = `<span class="pnl pos">Gets ${fmt(-settle)}</span>`;
+      const paid = p.cashPaid || 0;
+      return `<div class="player-line">
+        <span>${escapeHtml(p.name)} <span style="color:#64748b;font-size:12px;">(${p.buyins}× ${fmt(g.buyinAmount)}, paid ${fmt(paid)})</span></span>
+        <span style="display:flex;gap:14px;align-items:center;">
+          ${settleText}
+          <span class="pnl ${cls}">${sign}${fmt(p.pnl)}</span>
+        </span>
+      </div>`;
+    }).join('');
+    return `
+      <div class="game-history-item">
+        <div class="game-header">
+          <div class="game-date">${dateStr} · Buy-in ${fmt(g.buyinAmount)}</div>
+          <button class="btn-danger btn-icon" onclick="deleteGame('${g.id}')" title="Delete">×</button>
+        </div>
+        ${playersHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteGame(id) {
+  if (!confirm('Delete this game from history?')) return;
+  state.history = state.history.filter(g => g.id !== id);
+  save();
+  renderHistory();
+}
+
+// ---------- Stats ----------
+function renderStats() {
+  const totals = new Map();
+  for (const g of state.history) {
+    for (const p of g.players) {
+      const key = p.name.toLowerCase();
+      const cur = totals.get(key) || { name: p.name, games: 0, totalIn: 0, cashPaid: 0, totalOut: 0, pnl: 0, settle: 0 };
+      const paid = p.cashPaid || 0;
+      const settle = p.settle != null ? p.settle : (p.totalIn - paid - p.cashout);
+      cur.games += 1;
+      cur.totalIn += p.totalIn;
+      cur.cashPaid += paid;
+      cur.totalOut += p.cashout;
+      cur.pnl += p.pnl;
+      cur.settle += settle;
+      totals.set(key, cur);
+    }
+  }
+  const rows = Array.from(totals.values()).sort((a, b) => b.pnl - a.pnl);
+  const table = document.getElementById('statsTable');
+  const body = document.getElementById('statsBody');
+  const empty = document.getElementById('statsEmpty');
+  if (rows.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+  body.innerHTML = rows.map(r => {
+    const cls = r.pnl > 0 ? 'pos' : r.pnl < 0 ? 'neg' : 'zero';
+    const sign = r.pnl > 0 ? '+' : '';
+    let settleText, settleClass;
+    if (Math.abs(r.settle) < 0.01) { settleText = 'Settled'; settleClass = 'zero'; }
+    else if (r.settle > 0) { settleText = 'Owes ' + fmt(r.settle); settleClass = 'neg'; }
+    else { settleText = 'Gets ' + fmt(-r.settle); settleClass = 'pos'; }
+    return `<tr>
+      <td>${escapeHtml(r.name)}</td>
+      <td class="num">${r.games}</td>
+      <td class="num">${fmt(r.totalIn)}</td>
+      <td class="num">${fmt(r.cashPaid)}</td>
+      <td class="num">${fmt(r.totalOut)}</td>
+      <td class="num pnl ${settleClass}">${settleText}</td>
+      <td class="num pnl ${cls}">${sign}${fmt(r.pnl)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Expose for inline handlers
+window.adjustBuyins = adjustBuyins;
+window.updateCashout = updateCashout;
+window.updateCashPaid = updateCashPaid;
+window.removePlayer = removePlayer;
+window.deleteGame = deleteGame;
+
+// ---------- Init ----------
+load();
+buyinInput.value = state.current.buyinAmount;
+renderPlayers();
+</script>
+</body>
+</html>
